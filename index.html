@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Flight Companion</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e2a47">
+<style>
+  :root {
+    --bg: #0e1620;
+    --panel: #16202c;
+    --panel-2: #1d2a38;
+    --accent: #4da3ff;
+    --text: #eef3f8;
+    --text-dim: #93a3b5;
+    --border: #253444;
+    --danger: #ff6b6b;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+  }
+  #app { display: flex; flex-direction: column; height: 100%; }
+  header {
+    padding: calc(14px + var(--safe-top)) 16px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 19px; margin: 0; font-weight: 600; }
+  header .action { background: none; border: none; color: var(--accent); font-size: 16px; font-weight: 500; padding: 6px 4px; }
+  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .view { display: none; height: 100%; }
+  .view.active { display: block; }
+  nav.tabbar {
+    display: flex; background: var(--panel); border-top: 1px solid var(--border);
+    padding-bottom: var(--safe-bottom);
+  }
+  nav.tabbar button {
+    flex: 1; background: none; border: none; color: var(--text-dim);
+    padding: 8px 0 10px; font-size: 11px; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+  }
+  nav.tabbar button.active { color: var(--accent); }
+  nav.tabbar svg { width: 24px; height: 24px; }
+
+  .empty { text-align: center; color: var(--text-dim); padding: 60px 24px; font-size: 15px; line-height: 1.5; }
+  .list { padding: 8px 0; }
+  .row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid var(--border); background: var(--panel);
+  }
+  .row .info { flex: 1; min-width: 0; }
+  .row .title { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+  .row .del { background: none; border: none; color: var(--danger); font-size: 20px; padding: 4px 6px; }
+
+  .fab-bar { display: flex; gap: 10px; padding: 14px 16px; background: var(--bg); }
+  .btn {
+    background: var(--accent); color: #08131f; border: none; border-radius: 12px;
+    padding: 13px 18px; font-size: 15px; font-weight: 600; flex: 1;
+  }
+  .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  input[type=text], textarea {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 12px; font-size: 15px; width: 100%; font-family: inherit;
+  }
+  input[type=text]:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+  .search-box { display: flex; gap: 8px; padding: 12px 16px; background: var(--bg); }
+  .search-box input { flex: 1; }
+  .search-box button { padding: 12px 16px; border-radius: 10px; }
+
+  .chart-group-title {
+    padding: 14px 16px 6px; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-dim);
+  }
+
+  /* Fullscreen viewer / editor */
+  .full-screen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 50;
+    display: flex; flex-direction: column;
+  }
+  .full-screen header { padding-top: calc(14px + var(--safe-top)); }
+  .full-screen iframe { flex: 1; border: none; width: 100%; background: #fff; }
+  .full-screen textarea.note-body {
+    flex: 1; border: none; border-radius: 0; padding: 16px; resize: none;
+    background: var(--bg); font-size: 16px; line-height: 1.5;
+  }
+  .full-screen input.note-title {
+    border: none; border-bottom: 1px solid var(--border); border-radius: 0;
+    background: var(--bg); font-size: 20px; font-weight: 600; padding: 14px 16px;
+  }
+
+  .status { text-align: center; padding: 20px; color: var(--text-dim); font-size: 14px; }
+  .status.error { color: var(--danger); }
+  .spinner {
+    width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .offline-banner {
+    background: #3a2a12; color: #ffc978; font-size: 12.5px; text-align: center;
+    padding: 6px; display: none;
+  }
+  body.offline .offline-banner { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="offline-banner">You're offline — Documents, cached charts, and Notebook still work fully.</div>
+
+  <!-- DOCUMENTS VIEW -->
+  <div class="view active" id="view-documents">
+    <header><h1>Documents</h1><button class="action" id="btn-import-doc">Import</button></header>
+    <main><div id="documents-list"></div></main>
+  </div>
+
+  <!-- CHARTS VIEW -->
+  <div class="view" id="view-charts">
+    <header><h1>Charts</h1></header>
+    <main>
+      <div class="search-box">
+        <input type="text" id="icao-input" placeholder="ICAO code, e.g. KJFK" autocapitalize="characters" autocorrect="off">
+        <button class="btn" id="btn-search-charts" style="flex:0 0 auto;">Search</button>
+      </div>
+      <div id="charts-search-status"></div>
+      <div id="charts-search-results"></div>
+      <div id="charts-cached-list"></div>
+    </main>
+  </div>
+
+  <!-- NOTEBOOK VIEW -->
+  <div class="view" id="view-notes">
+    <header><h1>Notebook</h1><button class="action" id="btn-new-note">New</button></header>
+    <main><div id="notes-list"></div></main>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="documents">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      Documents
+    </button>
+    <button class="tab-btn" data-view="charts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+      Charts
+    </button>
+    <button class="tab-btn" data-view="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      Notebook
+    </button>
+  </nav>
+</div>
+
+<input type="file" id="file-input-doc" accept="application/pdf" multiple style="display:none">
+
+<script>
+/* ---------- IndexedDB wrapper ---------- */
+const DB_NAME = "flight-companion";
+const DB_VERSION = 1;
+let dbPromise = new Promise((resolve, reject) => {
+  const req = indexedDB.open(DB_NAME, DB_VERSION);
+  req.onupgradeneeded = (e) => {
+    const db = e.target.result;
+    if (!db.objectStoreNames.contains("documents")) db.createObjectStore("documents", { keyPath: "id" });
+    if (!db.objectStoreNames.contains("charts")) db.createObjectStore("charts", { keyPath: "id" });
+    if (!db.objectStoreNames.contains("notes")) db.createObjectStore("notes", { keyPath: "id" });
+  };
+  req.onsuccess = (e) => resolve(e.target.result);
+  req.onerror = (e) => reject(e.target.error);
+});
+
+async function dbGetAll(store) {
+  const db = await dbPromise;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readonly");
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function dbPut(store, value) {
+  const db = await dbPromise;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).put(value);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbDelete(store, id) {
+  const db = await dbPromise;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, "readwrite");
+    tx.objectStore(store).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+/* ---------- Tab navigation ---------- */
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("view-" + btn.dataset.view).classList.add("active");
+  });
+});
+
+/* ---------- Offline banner ---------- */
+function updateOnlineStatus() { document.body.classList.toggle("offline", !navigator.onLine); }
+window.addEventListener("online", updateOnlineStatus);
+window.addEventListener("offline", updateOnlineStatus);
+updateOnlineStatus();
+
+/* ---------- Fullscreen viewer helper ---------- */
+function openFullScreen(titleText, bodyEl, onClose) {
+  const wrap = document.createElement("div");
+  wrap.className = "full-screen";
+  const header = document.createElement("header");
+  header.innerHTML = `<h1 style="font-size:16px;">${titleText}</h1><button class="action">Done</button>`;
+  header.querySelector("button").addEventListener("click", () => {
+    if (onClose) onClose();
+    wrap.remove();
+  });
+  wrap.appendChild(header);
+  wrap.appendChild(bodyEl);
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+/* ================= DOCUMENTS ================= */
+async function renderDocuments() {
+  const docs = (await dbGetAll("documents")).sort((a, b) => b.dateAdded - a.dateAdded);
+  const list = document.getElementById("documents-list");
+  if (docs.length === 0) {
+    list.innerHTML = `<div class="empty">No documents yet.<br>Tap Import to add a PDF — checklists, manuals, anything. It's saved on this device and works offline.</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  const container = document.createElement("div");
+  container.className = "list";
+  docs.forEach((doc) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `
+      <div class="info">
+        <div class="title">${escapeHtml(doc.title)}</div>
+        <div class="sub">${new Date(doc.dateAdded).toLocaleDateString()}</div>
+      </div>
+      <button class="del">&times;</button>`;
+    row.querySelector(".info").addEventListener("click", () => viewDocument(doc));
+    row.querySelector(".del").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await dbDelete("documents", doc.id);
+      renderDocuments();
+    });
+    container.appendChild(row);
+  });
+  list.appendChild(container);
+}
+
+function viewDocument(doc) {
+  const url = URL.createObjectURL(doc.blob);
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+  openFullScreen(escapeHtml(doc.title), iframe, () => URL.revokeObjectURL(url));
+}
+
+document.getElementById("btn-import-doc").addEventListener("click", () => {
+  document.getElementById("file-input-doc").click();
+});
+document.getElementById("file-input-doc").addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    await dbPut("documents", {
+      id: uid(),
+      title: file.name.replace(/\.pdf$/i, ""),
+      blob: file,
+      dateAdded: Date.now(),
+    });
+  }
+  e.target.value = "";
+  renderDocuments();
+});
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ================= CHARTS ================= */
+// Free, no-key FAA chart data via AviationAPI (api.aviationapi.com). Covers
+// US airports only (FAA d-TPP data) — no international coverage. If this
+// endpoint ever changes or goes down, that's the one thing to check first;
+// everything else here (search UI, offline caching, viewer) stays the same
+// regardless of the data source.
+const CHARTS_API = "https://api.aviationapi.com/v1/charts";
+
+document.getElementById("btn-search-charts").addEventListener("click", searchCharts);
+document.getElementById("icao-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") searchCharts();
+});
+
+async function searchCharts() {
+  const icaoRaw = document.getElementById("icao-input").value.trim().toUpperCase();
+  const statusEl = document.getElementById("charts-search-status");
+  const resultsEl = document.getElementById("charts-search-results");
+  resultsEl.innerHTML = "";
+  if (!icaoRaw) return;
+
+  if (!navigator.onLine) {
+    statusEl.innerHTML = `<div class="status error">You're offline — can't search for new charts. Already-downloaded charts below still work.</div>`;
+    return;
+  }
+
+  statusEl.innerHTML = `<div class="status"><div class="spinner"></div>Searching…</div>`;
+  try {
+    const res = await fetch(`${CHARTS_API}?apt=${encodeURIComponent(icaoRaw)}`);
+    if (!res.ok) throw new Error("Request failed (" + res.status + ")");
+    const data = await res.json();
+    const airportCharts = data[icaoRaw];
+    if (!airportCharts) {
+      statusEl.innerHTML = `<div class="status">No charts found for ${icaoRaw}. Double-check the ICAO code (US airports only, e.g. KJFK, not JFK).</div>`;
+      return;
+    }
+    statusEl.innerHTML = "";
+    const cachedIds = new Set((await dbGetAll("charts")).map((c) => c.id));
+
+    // Response groups charts by category (APD, IAP, STAR, DP, MIN, etc.)
+    Object.entries(airportCharts).forEach(([category, charts]) => {
+      if (!Array.isArray(charts) || charts.length === 0) return;
+      const groupTitle = document.createElement("div");
+      groupTitle.className = "chart-group-title";
+      groupTitle.textContent = category;
+      resultsEl.appendChild(groupTitle);
+
+      const container = document.createElement("div");
+      container.className = "list";
+      charts.forEach((chart) => {
+        const chartId = icaoRaw + "-" + (chart.chart_name || chart.pdf_name);
+        const row = document.createElement("div");
+        row.className = "row";
+        const already = cachedIds.has(chartId);
+        row.innerHTML = `
+          <div class="info">
+            <div class="title">${escapeHtml(chart.chart_name || "Chart")}</div>
+            <div class="sub">${escapeHtml(chart.chart_code || category)}</div>
+          </div>
+          <button class="btn secondary" style="flex:0 0 auto; padding:8px 14px;">${already ? "Saved" : "Download"}</button>`;
+        const btn = row.querySelector("button");
+        if (already) btn.disabled = true;
+        btn.addEventListener("click", () => downloadChart(chartId, icaoRaw, chart, btn));
+        container.appendChild(row);
+      });
+      resultsEl.appendChild(container);
+    });
+  } catch (err) {
+    statusEl.innerHTML = `<div class="status error">Couldn't reach the chart service: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function downloadChart(chartId, icao, chart, btnEl) {
+  btnEl.disabled = true;
+  btnEl.textContent = "…";
+  try {
+    const res = await fetch(chart.pdf_path);
+    if (!res.ok) throw new Error("download failed");
+    const blob = await res.blob();
+    await dbPut("charts", {
+      id: chartId,
+      icao,
+      name: chart.chart_name || "Chart",
+      category: chart.chart_code || "",
+      blob,
+      dateCached: Date.now(),
+    });
+    btnEl.textContent = "Saved";
+    renderCachedCharts();
+  } catch (err) {
+    btnEl.disabled = false;
+    btnEl.textContent = "Retry";
+  }
+}
+
+async function renderCachedCharts() {
+  const charts = (await dbGetAll("charts")).sort((a, b) => b.dateCached - a.dateCached);
+  const el = document.getElementById("charts-cached-list");
+  el.innerHTML = "";
+  if (charts.length === 0) return;
+
+  const heading = document.createElement("div");
+  heading.className = "chart-group-title";
+  heading.textContent = "Downloaded for offline use";
+  el.appendChild(heading);
+
+  const byAirport = {};
+  charts.forEach((c) => { (byAirport[c.icao] ||= []).push(c); });
+
+  Object.entries(byAirport).forEach(([icao, list]) => {
+    const groupTitle = document.createElement("div");
+    groupTitle.className = "chart-group-title";
+    groupTitle.style.color = "var(--accent)";
+    groupTitle.textContent = icao;
+    el.appendChild(groupTitle);
+
+    const container = document.createElement("div");
+    container.className = "list";
+    list.forEach((chart) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <div class="info">
+          <div class="title">${escapeHtml(chart.name)}</div>
+          <div class="sub">${escapeHtml(chart.category)}</div>
+        </div>
+        <button class="del">&times;</button>`;
+      row.querySelector(".info").addEventListener("click", () => viewChart(chart));
+      row.querySelector(".del").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await dbDelete("charts", chart.id);
+        renderCachedCharts();
+      });
+      container.appendChild(row);
+    });
+    el.appendChild(container);
+  });
+}
+
+function viewChart(chart) {
+  const url = URL.createObjectURL(chart.blob);
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+  openFullScreen(escapeHtml(chart.name), iframe, () => URL.revokeObjectURL(url));
+}
+
+/* ================= NOTEBOOK ================= */
+async function renderNotes() {
+  const notes = (await dbGetAll("notes")).sort((a, b) => b.dateModified - a.dateModified);
+  const list = document.getElementById("notes-list");
+  if (notes.length === 0) {
+    list.innerHTML = `<div class="empty">No notes yet.<br>Tap New to jot something down. Works fully offline.</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  const container = document.createElement("div");
+  container.className = "list";
+  notes.forEach((note) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `
+      <div class="info">
+        <div class="title">${escapeHtml(note.title || "Untitled")}</div>
+        <div class="sub">${escapeHtml((note.body || "").slice(0, 60))}</div>
+      </div>
+      <button class="del">&times;</button>`;
+    row.querySelector(".info").addEventListener("click", () => editNote(note));
+    row.querySelector(".del").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await dbDelete("notes", note.id);
+      renderNotes();
+    });
+    container.appendChild(row);
+  });
+  list.appendChild(container);
+}
+
+document.getElementById("btn-new-note").addEventListener("click", () => {
+  editNote({ id: uid(), title: "", body: "", dateModified: Date.now() });
+});
+
+function editNote(note) {
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  wrap.style.flex = "1";
+  wrap.style.minHeight = "0";
+
+  const titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.className = "note-title";
+  titleInput.placeholder = "Title";
+  titleInput.value = note.title;
+
+  const bodyInput = document.createElement("textarea");
+  bodyInput.className = "note-body";
+  bodyInput.placeholder = "Start typing…";
+  bodyInput.value = note.body;
+
+  wrap.appendChild(titleInput);
+  wrap.appendChild(bodyInput);
+
+  const save = async () => {
+    note.title = titleInput.value;
+    note.body = bodyInput.value;
+    note.dateModified = Date.now();
+    await dbPut("notes", note);
+  };
+  titleInput.addEventListener("input", save);
+  bodyInput.addEventListener("input", save);
+
+  openFullScreen("Note", wrap, () => { save(); renderNotes(); });
+  setTimeout(() => titleInput.focus(), 50);
+}
+
+/* ---------- Service worker + init ---------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+
+renderDocuments();
+renderCachedCharts();
+renderNotes();
+</script>
+</body>
+</html>
