@@ -3,7 +3,7 @@
 // downloaded charts, and notes are stored separately in IndexedDB (see
 // index.html) — this file only handles the app's own code/assets.
 
-const CACHE_NAME = "flight-companion-v1";
+const CACHE_NAME = "flight-companion-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,10 +11,26 @@ const APP_SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
+// PDF.js — powers the chart/document annotator. Cached separately (best
+// effort) so a hiccup fetching these doesn't fail the whole install and
+// leave the core app shell uncached.
+const PDFJS_ASSETS = [
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await cache.addAll(APP_SHELL);
+      await Promise.all(
+        PDFJS_ASSETS.map((url) =>
+          fetch(url, { mode: "cors" })
+            .then((res) => { if (res.ok) return cache.put(url, res); })
+            .catch(() => {})
+        )
+      );
+    })
   );
   self.skipWaiting();
 });
