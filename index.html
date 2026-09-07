@@ -11,40 +11,64 @@
 <meta name="theme-color" content="#0e2a47">
 <style>
   :root {
-    --bg: #0e1620;
-    --panel: #16202c;
-    --panel-2: #1d2a38;
-    --accent: #4da3ff;
-    --text: #eef3f8;
-    --text-dim: #93a3b5;
-    --border: #253444;
-    --danger: #ff6b6b;
+    --bg: #0a0e16;
+    --panel: rgba(255, 255, 255, 0.07);
+    --panel-2: rgba(255, 255, 255, 0.10);
+    --glass-border: rgba(255, 255, 255, 0.16);
+    --glass-highlight: rgba(255, 255, 255, 0.35);
+    --accent: #5ac8ff;
+    --text: #f2f6fb;
+    --text-dim: #a7b4c4;
+    --border: rgba(255, 255, 255, 0.10);
+    --danger: #ff7a7a;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    margin: 0; height: 100%; color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     overscroll-behavior: none;
+    background: var(--bg);
+  }
+  /* Soft colorful blobs behind everything — this is what the glass panels
+     actually refract/blur. Fixed so it stays put as you scroll. */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(90, 130, 255, 0.45), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(255, 120, 190, 0.32), transparent 45%),
+      radial-gradient(circle at 75% 80%, rgba(80, 220, 200, 0.30), transparent 45%),
+      radial-gradient(circle at 20% 85%, rgba(255, 180, 90, 0.25), transparent 45%),
+      var(--bg);
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0% { filter: hue-rotate(0deg) brightness(1); }
+    100% { filter: hue-rotate(25deg) brightness(1.05); }
   }
   #app { display: flex; flex-direction: column; height: 100%; }
   header {
-    padding: calc(14px + var(--safe-top)) 16px 14px;
-    background: rgba(22, 32, 44, 0.78);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border);
+    margin: calc(8px + var(--safe-top)) 10px 6px;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--glass-highlight);
     display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 5;
   }
   header h1 { font-size: 19px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
   header .action {
-    background: none; border: none; color: var(--accent); font-size: 16px; font-weight: 500;
-    padding: 6px 4px; transition: opacity 0.15s ease, transform 0.15s cubic-bezier(.4,0,.2,1);
+    background: rgba(90, 200, 255, 0.16); border: 1px solid rgba(90, 200, 255, 0.3);
+    color: var(--accent); font-size: 15px; font-weight: 600;
+    padding: 7px 14px; border-radius: 100px;
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(.4,0,.2,1);
   }
-  header .action:active { opacity: 0.4; transform: scale(0.94); }
-  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  header .action:active { opacity: 0.5; transform: scale(0.94); }
+  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 4px; }
   .view {
     display: none; height: 100%;
     opacity: 0; transform: translateY(6px) scale(0.995);
@@ -55,66 +79,86 @@
   }
   @keyframes viewIn { to { opacity: 1; transform: translateY(0) scale(1); } }
   nav.tabbar {
-    display: flex; background: rgba(22, 32, 44, 0.86);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid var(--border);
-    padding-bottom: var(--safe-bottom);
+    display: flex;
+    margin: 6px 10px calc(8px + var(--safe-bottom));
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 var(--glass-highlight);
     position: relative; z-index: 5;
+    padding: 4px;
   }
   nav.tabbar button {
     flex: 1; background: none; border: none; color: var(--text-dim);
-    padding: 8px 0 10px; font-size: 11px; display: flex; flex-direction: column;
-    align-items: center; gap: 3px;
-    transition: color 0.2s ease, transform 0.15s cubic-bezier(.4,0,.2,1);
+    padding: 8px 0 8px; font-size: 11px; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; border-radius: 16px;
+    transition: color 0.2s ease, transform 0.15s cubic-bezier(.4,0,.2,1), background 0.2s ease;
   }
   nav.tabbar button:active { transform: scale(0.9); }
-  nav.tabbar button.active { color: var(--accent); }
+  nav.tabbar button.active { color: var(--accent); background: rgba(90, 200, 255, 0.14); }
   nav.tabbar button.active svg { transform: scale(1.08); }
   nav.tabbar svg { width: 24px; height: 24px; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
 
   .empty { text-align: center; color: var(--text-dim); padding: 60px 24px; font-size: 15px; line-height: 1.5;
     animation: viewIn 0.4s cubic-bezier(.22,1,.36,1) forwards; opacity: 0; }
-  .list { padding: 8px 0; }
+  .list { padding: 6px 6px; display: flex; flex-direction: column; gap: 8px; }
   .row {
     display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-    border-bottom: 1px solid var(--border); background: var(--panel);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.18);
     opacity: 0; transform: translateX(-8px);
     animation: rowIn 0.36s cubic-bezier(.22,1,.36,1) forwards;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, transform 0.15s cubic-bezier(.4,0,.2,1);
   }
-  .row:active { background: var(--panel-2); }
+  .row:active { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)); transform: scale(0.98); }
   @keyframes rowIn { to { opacity: 1; transform: translateX(0); } }
   .row .info { flex: 1; min-width: 0; transition: opacity 0.15s ease; }
   .row .info:active { opacity: 0.6; }
   .row .title { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
   .row .del {
-    background: none; border: none; color: var(--danger); font-size: 20px; padding: 4px 8px;
+    background: rgba(255, 122, 122, 0.14); border: 1px solid rgba(255, 122, 122, 0.28);
+    color: var(--danger); font-size: 18px; padding: 4px 10px; border-radius: 100px;
     transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
   }
   .row .del:active { transform: scale(0.8); opacity: 0.5; }
 
-  .fab-bar { display: flex; gap: 10px; padding: 14px 16px; background: var(--bg); }
+  .fab-bar { display: flex; gap: 10px; padding: 14px 12px; }
   .btn {
-    background: var(--accent); color: #08131f; border: none; border-radius: 12px;
+    background: linear-gradient(180deg, rgba(90,200,255,0.9), rgba(70,160,255,0.85));
+    color: #06131f; border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 16px;
     padding: 13px 18px; font-size: 15px; font-weight: 600; flex: 1;
+    box-shadow: 0 6px 18px rgba(80,170,255,0.35), inset 0 1px 0 rgba(255,255,255,0.5);
     transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease, background 0.15s ease;
   }
   .btn:active { transform: scale(0.96); opacity: 0.85; }
   .btn:disabled { opacity: 0.5; transform: none; }
-  .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn.secondary {
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    color: var(--text); border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
   input[type=text], textarea {
-    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
-    border-radius: 10px; padding: 12px; font-size: 15px; width: 100%; font-family: inherit;
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border); color: var(--text);
+    border-radius: 14px; padding: 12px 14px; font-size: 15px; width: 100%; font-family: inherit;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   input[type=text]:focus, textarea:focus {
     outline: none; border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.18);
+    box-shadow: 0 0 0 3px rgba(90, 200, 255, 0.22);
   }
 
-  .search-box { display: flex; gap: 8px; padding: 12px 16px; background: var(--bg); }
+  .search-box { display: flex; gap: 8px; padding: 12px 12px; }
   .search-box input { flex: 1; }
   .search-box button { padding: 12px 16px; border-radius: 10px; }
 
@@ -134,7 +178,7 @@
   .full-screen.closing { animation: sheetOut 0.28s cubic-bezier(.4,0,.6,1) forwards; }
   @keyframes sheetIn { to { transform: translateY(0); } }
   @keyframes sheetOut { to { transform: translateY(100%); } }
-  .full-screen header { padding-top: calc(14px + var(--safe-top)); }
+  .full-screen header { margin: calc(8px + var(--safe-top)) 10px 6px; }
   .full-screen iframe {
     flex: 1; border: none; width: 100%; background: #fff;
     opacity: 0; animation: fadeIn 0.3s ease 0.15s forwards;
@@ -142,11 +186,12 @@
   @keyframes fadeIn { to { opacity: 1; } }
   .full-screen textarea.note-body {
     flex: 1; border: none; border-radius: 0; padding: 16px; resize: none;
-    background: var(--bg); font-size: 16px; line-height: 1.5;
+    background: transparent; font-size: 16px; line-height: 1.5; backdrop-filter: none;
   }
   .full-screen input.note-title {
     border: none; border-bottom: 1px solid var(--border); border-radius: 0;
-    background: var(--bg); font-size: 20px; font-weight: 600; padding: 14px 16px;
+    background: transparent; font-size: 20px; font-weight: 600; padding: 14px 16px;
+    backdrop-filter: none;
   }
 
   .status { text-align: center; padding: 20px; color: var(--text-dim); font-size: 14px;
@@ -159,11 +204,50 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .offline-banner {
-    background: #3a2a12; color: #ffc978; font-size: 12.5px; text-align: center;
-    padding: 6px; display: none;
+    margin: 6px 10px 0; padding: 8px 14px; border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,190,110,0.22), rgba(255,190,110,0.08));
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,190,110,0.3);
+    color: #ffc978; font-size: 12.5px; text-align: center;
+    display: none;
     animation: viewIn 0.3s cubic-bezier(.22,1,.36,1) forwards;
   }
   body.offline .offline-banner { display: block; }
+
+  /* Drawing canvas */
+  .draw-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .draw-canvas-holder { flex: 1; position: relative; background: #12181f; overflow: hidden; touch-action: none; }
+  .draw-canvas-holder canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .draw-toolbar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px calc(10px + var(--safe-bottom));
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border-top: 1px solid var(--glass-border);
+    overflow-x: auto;
+  }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+    border: 2px solid rgba(255,255,255,0.25);
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1);
+  }
+  .swatch.active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
+  .brush-sizes { display: flex; gap: 6px; flex: 0 0 auto; }
+  .brush-dot {
+    width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border);
+    transition: transform 0.15s cubic-bezier(.34,1.56,.64,1), background 0.15s ease;
+  }
+  .brush-dot.active { background: rgba(90,200,255,0.22); border-color: var(--accent); transform: scale(1.1); }
+  .brush-dot span { border-radius: 50%; background: var(--text); }
+  .draw-tool-btn {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center; color: var(--text);
+    transition: transform 0.15s cubic-bezier(.4,0,.2,1), background 0.15s ease;
+  }
+  .draw-tool-btn.active { background: rgba(90,200,255,0.22); border-color: var(--accent); color: var(--accent); }
+  .draw-tool-btn:active { transform: scale(0.88); }
 </style>
 </head>
 <body>
@@ -200,7 +284,13 @@
 
   <!-- NOTEBOOK VIEW -->
   <div class="view" id="view-notes">
-    <header><h1>Notebook</h1><button class="action" id="btn-new-note">New</button></header>
+    <header>
+      <h1>Notebook</h1>
+      <div style="display:flex; gap:8px;">
+        <button class="action" id="btn-new-note">Text</button>
+        <button class="action" id="btn-new-drawing">Draw</button>
+      </div>
+    </header>
     <main><div id="notes-list"></div></main>
   </div>
 
@@ -490,11 +580,13 @@ async function renderNotes() {
     row.className = "row";
     row.innerHTML = `
       <div class="info">
-        <div class="title">${escapeHtml(note.title || "Untitled")}</div>
-        <div class="sub">${escapeHtml((note.body || "").slice(0, 60))}</div>
+        <div class="title">${note.type === "drawing" ? "🎨 " : ""}${escapeHtml(note.title || "Untitled")}</div>
+        <div class="sub">${note.type === "drawing" ? "Sketch" : escapeHtml((note.body || "").slice(0, 60))}</div>
       </div>
       <button class="del">&times;</button>`;
-    row.querySelector(".info").addEventListener("click", () => editNote(note));
+    row.querySelector(".info").addEventListener("click", () => {
+      if (note.type === "drawing") editDrawing(note); else editNote(note);
+    });
     row.querySelector(".del").addEventListener("click", async (e) => {
       e.stopPropagation();
       await dbDelete("notes", note.id);
@@ -507,7 +599,10 @@ async function renderNotes() {
 }
 
 document.getElementById("btn-new-note").addEventListener("click", () => {
-  editNote({ id: uid(), title: "", body: "", dateModified: Date.now() });
+  editNote({ id: uid(), type: "text", title: "", body: "", dateModified: Date.now() });
+});
+document.getElementById("btn-new-drawing").addEventListener("click", () => {
+  editDrawing({ id: uid(), type: "drawing", title: "Sketch", drawingData: null, dateModified: Date.now() });
 });
 
 function editNote(note) {
@@ -534,6 +629,7 @@ function editNote(note) {
   const save = async () => {
     note.title = titleInput.value;
     note.body = bodyInput.value;
+    note.type = "text";
     note.dateModified = Date.now();
     await dbPut("notes", note);
   };
@@ -542,6 +638,150 @@ function editNote(note) {
 
   openFullScreen("Note", wrap, () => { save(); renderNotes(); });
   setTimeout(() => titleInput.focus(), 50);
+}
+
+/* ---------- Free-draw scratchpad ---------- */
+const DRAW_COLORS = ["#f2f6fb", "#ff6b6b", "#ffb454", "#ffe066", "#5ac8ff", "#63e6be", "#b197fc", "#ff8fc7"];
+const BRUSH_SIZES = [3, 8, 16];
+
+function editDrawing(note) {
+  const wrap = document.createElement("div");
+  wrap.className = "draw-wrap";
+
+  const holder = document.createElement("div");
+  holder.className = "draw-canvas-holder";
+  const canvas = document.createElement("canvas");
+  holder.appendChild(canvas);
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "draw-toolbar";
+
+  let currentColor = DRAW_COLORS[0];
+  let currentSize = BRUSH_SIZES[1];
+  let isEraser = false;
+
+  // Color swatches
+  DRAW_COLORS.forEach((color, i) => {
+    const sw = document.createElement("button");
+    sw.className = "swatch" + (i === 0 ? " active" : "");
+    sw.style.background = color;
+    sw.addEventListener("click", () => {
+      currentColor = color; isEraser = false;
+      toolbar.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
+      sw.classList.add("active");
+      toolbar.querySelector(".draw-tool-btn.eraser").classList.remove("active");
+    });
+    toolbar.appendChild(sw);
+  });
+
+  // Brush sizes
+  const sizesWrap = document.createElement("div");
+  sizesWrap.className = "brush-sizes";
+  BRUSH_SIZES.forEach((size, i) => {
+    const dot = document.createElement("button");
+    dot.className = "brush-dot" + (i === 1 ? " active" : "");
+    dot.innerHTML = `<span style="width:${size}px;height:${size}px;"></span>`;
+    dot.addEventListener("click", () => {
+      currentSize = size;
+      sizesWrap.querySelectorAll(".brush-dot").forEach((d) => d.classList.remove("active"));
+      dot.classList.add("active");
+    });
+    sizesWrap.appendChild(dot);
+  });
+  toolbar.appendChild(sizesWrap);
+
+  // Eraser
+  const eraserBtn = document.createElement("button");
+  eraserBtn.className = "draw-tool-btn eraser";
+  eraserBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H8l-6-6 10-10a2 2 0 0 1 2.8 0l5.2 5.2a2 2 0 0 1 0 2.8L11 21"/></svg>`;
+  eraserBtn.addEventListener("click", () => {
+    isEraser = true;
+    toolbar.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
+    eraserBtn.classList.add("active");
+  });
+  toolbar.appendChild(eraserBtn);
+
+  // Clear
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "draw-tool-btn";
+  clearBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
+  clearBtn.addEventListener("click", () => {
+    ctx.fillStyle = "#12181f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    save();
+  });
+  toolbar.appendChild(clearBtn);
+
+  wrap.appendChild(holder);
+  wrap.appendChild(toolbar);
+
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    const rect = holder.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const prev = canvas.width ? canvas.toDataURL() : null;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = "#12181f";
+    ctx.fillRect(0, 0, rect.width, rect.height);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    if (prev) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = prev;
+    } else if (note.drawingData) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = note.drawingData;
+    }
+  }
+
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+  function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = pos(e);
+    lastX = p.x; lastY = p.y;
+  }
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = pos(e);
+    ctx.strokeStyle = isEraser ? "#12181f" : currentColor;
+    ctx.lineWidth = isEraser ? currentSize * 2.5 : currentSize;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+  function end() { if (drawing) { drawing = false; save(); } }
+
+  canvas.addEventListener("pointerdown", start);
+  canvas.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", move, { passive: false });
+  canvas.addEventListener("touchend", end);
+
+  const save = async () => {
+    note.type = "drawing";
+    note.drawingData = canvas.toDataURL("image/png");
+    note.dateModified = Date.now();
+    await dbPut("notes", note);
+  };
+
+  openFullScreen("Sketch", wrap, () => { save(); renderNotes(); });
+  requestAnimationFrame(resizeCanvas);
 }
 
 /* ---------- Service worker + init ---------- */
