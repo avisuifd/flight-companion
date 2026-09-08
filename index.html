@@ -390,6 +390,74 @@
     transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
   }
   .ob-next:active { transform: scale(0.94); opacity: 0.9; }
+
+  /* ---------- Settings ---------- */
+  .settings-group { padding: 4px 12px 4px; }
+  .settings-label {
+    padding: 14px 8px 8px; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-dim); font-weight: 600;
+  }
+  .settings-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(30px) saturate(190%); -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.25), inset 0 1px 0 var(--glass-highlight);
+  }
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; width: 100%; background: none; border: none; text-align: left;
+    color: var(--text); font-family: inherit;
+  }
+  .settings-row-btn { transition: opacity 0.15s ease; }
+  .settings-row-btn:active { opacity: 0.55; }
+  .settings-row-title { font-size: 15px; font-weight: 600; }
+  .settings-row-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; max-width: 280px; }
+  .settings-chevron { color: var(--text-dim); font-size: 20px; }
+  .theme-toggle {
+    position: relative; display: flex; margin: 0 16px 16px; padding: 4px;
+    background: rgba(0,0,0,0.18); border-radius: 100px; border: 1px solid var(--border);
+  }
+  .theme-toggle-thumb {
+    position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px);
+    background: linear-gradient(160deg, #5ac8ff, #2f7fd6); border-radius: 100px;
+    box-shadow: 0 4px 14px rgba(90,200,255,0.4);
+    transition: transform 0.38s cubic-bezier(.34,1.56,.64,1);
+  }
+  .theme-toggle[data-active="day"] .theme-toggle-thumb { transform: translateX(100%); }
+  .theme-toggle-opt {
+    flex: 1; position: relative; z-index: 1; background: none; border: none;
+    padding: 9px 0; font-size: 14px; font-weight: 600; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: color 0.25s ease;
+  }
+  .theme-toggle-opt svg { width: 15px; height: 15px; }
+  .theme-toggle[data-active="night"] .theme-toggle-opt[data-theme="night"],
+  .theme-toggle[data-active="day"] .theme-toggle-opt[data-theme="day"] { color: #06131f; }
+
+  /* ---------- Day theme ---------- */
+  body.day {
+    --bg: #eef4fa;
+    --panel: rgba(10, 25, 45, 0.05);
+    --panel-2: rgba(10, 25, 45, 0.08);
+    --glass-border: rgba(10, 35, 60, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.75);
+    --accent: #0a84ff;
+    --text: #101b28;
+    --text-dim: #55677a;
+    --border: rgba(10, 35, 60, 0.10);
+  }
+  body.day::before {
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255, 210, 140, 0.4), transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(120, 200, 255, 0.35), transparent 42%),
+      radial-gradient(ellipse at 50% 40%, #cfe9ff, #eef7ff 55%, #ffffff 100%);
+  }
+  body.day .theme-toggle { background: rgba(0,0,0,0.06); }
+  body.day #onboarding {
+    background: radial-gradient(140% 100% at 20% 0%, #bfe0ff 0%, #eaf5ff 55%, #ffffff 100%);
+  }
+  body.day .ob-desc, body.day .ob-skip { color: #4a5a6a; }
   .pdf-pagebar {
     display: flex; align-items: center; justify-content: center; gap: 14px;
     padding: 8px 14px;
@@ -455,6 +523,48 @@
     <main><div id="notes-list"></div></main>
   </div>
 
+  <!-- SETTINGS VIEW -->
+  <div class="view" id="view-settings">
+    <header><h1><span class="app-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></span>Settings</h1></header>
+    <main>
+      <div class="settings-group">
+        <div class="settings-label">Appearance</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <div class="settings-row-title">Theme</div>
+              <div class="settings-row-sub">Night is easier on the eyes in the cockpit after dark. Day gives more contrast in bright sunlight.</div>
+            </div>
+          </div>
+          <div class="theme-toggle" id="theme-toggle">
+            <div class="theme-toggle-thumb"></div>
+            <button class="theme-toggle-opt" data-theme="night">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+              Night
+            </button>
+            <button class="theme-toggle-opt" data-theme="day">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+              Day
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">Help</div>
+        <div class="settings-card">
+          <button class="settings-row settings-row-btn" id="btn-replay-tutorial">
+            <div class="settings-row-text">
+              <div class="settings-row-title">Replay tutorial</div>
+              <div class="settings-row-sub">See the welcome walkthrough again</div>
+            </div>
+            <span class="settings-chevron">›</span>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
   <nav class="tabbar">
     <button class="tab-btn active" data-view="documents">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
@@ -467,6 +577,10 @@
     <button class="tab-btn" data-view="notes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
       Notebook
+    </button>
+    <button class="tab-btn" data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
     </button>
   </nav>
 </div>
@@ -675,6 +789,30 @@ if (!localStorage.getItem(ONBOARD_KEY)) {
   setTimeout(showOnboarding, 400);
 }
 
+/* ---------- Theme (day / night) ---------- */
+const THEME_KEY = "fliteboard_theme";
+const themeMetaTag = document.querySelector('meta[name="theme-color"]');
+function applyTheme(theme, animate = true) {
+  const toggle = document.getElementById("theme-toggle");
+  document.body.classList.toggle("day", theme === "day");
+  if (toggle) toggle.dataset.active = theme;
+  if (themeMetaTag) themeMetaTag.setAttribute("content", theme === "day" ? "#eef4fa" : "#0e2a47");
+  if (animate) haptic(6);
+}
+document.querySelectorAll(".theme-toggle-opt").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const theme = btn.dataset.theme;
+    localStorage.setItem(THEME_KEY, theme);
+    applyTheme(theme);
+  });
+});
+applyTheme(localStorage.getItem(THEME_KEY) || "night", false); // default: Night
+
+document.getElementById("btn-replay-tutorial").addEventListener("click", () => {
+  haptic();
+  showOnboarding();
+});
+
 function updateOnlineStatus() { document.body.classList.toggle("offline", !navigator.onLine); }
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
@@ -803,8 +941,12 @@ async function openPdfAnnotator(record, storeName) {
   pdfCanvas.className = "pdf-render-canvas";
   const inkCanvas = document.createElement("canvas");
   inkCanvas.className = "pdf-ink-canvas";
+  const liveCanvas = document.createElement("canvas");
+  liveCanvas.className = "pdf-ink-canvas";
+  liveCanvas.style.pointerEvents = "none";
   zoomWrap.appendChild(pdfCanvas);
   zoomWrap.appendChild(inkCanvas);
+  zoomWrap.appendChild(liveCanvas);
   holder.appendChild(zoomWrap);
   const zoomResetBtn = document.createElement("button");
   zoomResetBtn.className = "zoom-reset-btn";
@@ -822,6 +964,8 @@ async function openPdfAnnotator(record, storeName) {
   let currentColor = DRAW_COLORS[1]; // red — good default for marking up charts
   let currentSize = 3;       // in PDF user-space units
   let mode = "pen";          // "pen" | "highlight" | "eraser"
+  let lastPenSize = 2;
+  let lastHighlightSize = 8; // highlighters read best thick, not thin
   let pageNum = 1;
   let pageScale = 1;         // CSS px per PDF user-space unit, current render
   let pdfDoc = null;
@@ -920,6 +1064,9 @@ async function openPdfAnnotator(record, storeName) {
       [penBtn, highlightBtn, eraserBtn].forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       mode = btn === penBtn ? "pen" : btn === highlightBtn ? "highlight" : "eraser";
+      if (mode === "highlight") currentSize = lastHighlightSize;
+      else if (mode === "pen") currentSize = lastPenSize;
+      sizesWrap.querySelectorAll(".brush-dot").forEach((d, i2) => d.classList.toggle("active", ANNOT_SIZES[i2] === currentSize));
     });
   });
   toolbar.appendChild(penBtn);
@@ -960,6 +1107,7 @@ async function openPdfAnnotator(record, storeName) {
     dot.addEventListener("click", () => {
       haptic();
       currentSize = size;
+      if (mode === "highlight") lastHighlightSize = size; else lastPenSize = size;
       sizesWrap.querySelectorAll(".brush-dot").forEach((d) => d.classList.remove("active"));
       dot.classList.add("active");
     });
@@ -1026,7 +1174,7 @@ async function openPdfAnnotator(record, storeName) {
 
     const offsetX = Math.max((rect.width - viewport.width) / 2, 0);
     const offsetY = Math.max((rect.height - viewport.height) / 2, 0);
-    [pdfCanvas, inkCanvas].forEach((c) => {
+    [pdfCanvas, inkCanvas, liveCanvas].forEach((c) => {
       c.width = Math.floor(viewport.width * dpr);
       c.height = Math.floor(viewport.height * dpr);
       c.style.width = viewport.width + "px";
@@ -1058,7 +1206,16 @@ async function openPdfAnnotator(record, storeName) {
   function drawStroke(ctx, s) {
     if (!s.points || s.points.length < 2) return;
     ctx.save();
-    ctx.globalAlpha = s.mode === "highlight" ? 0.35 : 1;
+    if (s.mode === "highlight") {
+      // "multiply" makes the color blend into the page like real highlighter
+      // ink instead of sitting on top as a flat translucent bar, and a
+      // single unbroken path (see live-stroke handling below) means
+      // overlapping curves don't blotch darker at the seams.
+      ctx.globalCompositeOperation = "multiply";
+      ctx.globalAlpha = 0.62;
+    } else {
+      ctx.globalAlpha = 1;
+    }
     ctx.strokeStyle = s.color;
     ctx.lineWidth = Math.max(s.size * pageScale, 1);
     ctx.lineCap = "round";
@@ -1075,7 +1232,7 @@ async function openPdfAnnotator(record, storeName) {
   // --- pointer input ---
   let drawing = false;
   let currentStroke = null;
-  const ictx = inkCanvas.getContext("2d");
+  const lctx = liveCanvas.getContext("2d");
 
   function screenToPdf(e) {
     const rect = inkCanvas.getBoundingClientRect();
@@ -1094,6 +1251,12 @@ async function openPdfAnnotator(record, storeName) {
     if (record.annotations[pageNum].length !== before) redrawInk();
   }
 
+  function clearLive() {
+    const dpr = window.devicePixelRatio || 1;
+    lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lctx.clearRect(0, 0, liveCanvas.width / dpr, liveCanvas.height / dpr);
+  }
+
   function start(e) {
     e.preventDefault();
     drawing = true;
@@ -1107,20 +1270,13 @@ async function openPdfAnnotator(record, storeName) {
     const p = screenToPdf(e);
     if (mode === "eraser") { eraseAt(p); return; }
     currentStroke.points.push(p);
-    // incremental draw of just the new segment for responsiveness
-    const pts = currentStroke.points;
-    const a = pts[pts.length - 2], b = pts[pts.length - 1];
-    ictx.save();
-    ictx.globalAlpha = mode === "highlight" ? 0.35 : 1;
-    ictx.strokeStyle = currentColor;
-    ictx.lineWidth = Math.max(currentSize * pageScale, 1);
-    ictx.lineCap = "round";
-    ictx.lineJoin = "round";
-    ictx.beginPath();
-    ictx.moveTo(a.x * pageScale, a.y * pageScale);
-    ictx.lineTo(b.x * pageScale, b.y * pageScale);
-    ictx.stroke();
-    ictx.restore();
+    // Redraw the whole in-progress stroke as one continuous path on a
+    // separate live layer each frame — a single stroke() call, so
+    // self-overlaps (tight curves, retraced lines) don't compound into
+    // dark blotches the way per-segment alpha compositing would,
+    // especially noticeable with the highlighter's translucent ink.
+    clearLive();
+    drawStroke(lctx, currentStroke);
   }
   async function end() {
     if (!drawing) return;
@@ -1128,8 +1284,10 @@ async function openPdfAnnotator(record, storeName) {
     if (mode === "eraser") { await persist(); return; }
     if (currentStroke && currentStroke.points.length > 1) {
       (record.annotations[pageNum] ||= []).push(currentStroke);
+      redrawInk();
       await persist();
     }
+    clearLive();
     currentStroke = null;
   }
 
