@@ -1,6 +1,6 @@
 {
-  "name": "Flight Companion",
-  "short_name": "Flight",
+  "name": "FliteBoard",
+  "short_name": "FliteBoard",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0e2a47",
