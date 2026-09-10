@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>FliteBoard</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/x-icon" href="icons/favicon.ico?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=2">
+<link rel="shortcut icon" href="/favicon.ico?v=2">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e2a47">
@@ -34,6 +35,15 @@
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
     overscroll-behavior: none;
     background: var(--bg);
+  }
+  /* iOS Safari's address bar showing/hiding changes the old 100% layout
+     viewport mid-scroll, which used to squash the header/tab bar for a
+     frame. 100dvh tracks the actual visible viewport instead, so the
+     chrome stays a fixed size and only the scrollable content area
+     resizes. Falls back to 100% automatically on anything that doesn't
+     support dvh. */
+  @supports (height: 100dvh) {
+    html, body, #app { height: 100dvh; }
   }
   /* Soft color behind everything — mostly a clear sky blue, like the
      reference: the glass gets its color almost entirely from blurring and
@@ -65,6 +75,7 @@
     margin: calc(8px + var(--safe-top)) 10px 6px;
     padding: 14px 18px;
     position: sticky; top: 0; overflow: hidden;
+    flex-shrink: 0;
     background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.07));
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(34px) saturate(190%);
@@ -110,6 +121,8 @@
   @keyframes viewIn { to { opacity: 1; transform: translateY(0) scale(1); } }
   nav.tabbar {
     display: flex;
+    flex-shrink: 0;
+    min-height: 58px;
     margin: 6px 10px calc(8px + var(--safe-bottom));
     position: relative; overflow: hidden; z-index: 5;
     background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.07));
@@ -126,7 +139,7 @@
     mix-blend-mode: screen;
   }
   nav.tabbar button {
-    flex: 1; background: none; border: none; color: var(--text-dim);
+    flex: 1; flex-shrink: 0; background: none; border: none; color: var(--text-dim);
     padding: 8px 0 8px; font-size: 11px; display: flex; flex-direction: column;
     align-items: center; gap: 3px; border-radius: 16px;
     position: relative; z-index: 1;
@@ -171,6 +184,42 @@
     position: relative; z-index: 1;
   }
   .row .del:active { transform: scale(0.8); opacity: 0.5; }
+  .row .rename {
+    background: rgba(255,255,255,0.10); border: 1px solid var(--glass-border);
+    color: var(--text-dim); font-size: 15px; padding: 5px 10px; border-radius: 100px;
+    transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
+    position: relative; z-index: 1;
+  }
+  .row .rename:active { transform: scale(0.8); opacity: 0.5; }
+
+  /* ---------- Rename dialog ---------- */
+  .rename-overlay {
+    position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(4, 8, 14, 0);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s ease, background 0.22s ease;
+  }
+  .rename-overlay.in { opacity: 1; background: rgba(4, 8, 14, 0.55); pointer-events: auto; }
+  .rename-card {
+    width: 100%; max-width: 320px; padding: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+    border: 1px solid var(--glass-border); border-radius: 20px;
+    backdrop-filter: blur(30px) saturate(190%); -webkit-backdrop-filter: blur(30px) saturate(190%);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
+    transform: scale(0.9) translateY(10px);
+    transition: transform 0.34s cubic-bezier(.34,1.56,.64,1);
+  }
+  .rename-overlay.in .rename-card { transform: scale(1) translateY(0); }
+  .rename-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+  .rename-input { margin-bottom: 16px; }
+  .rename-actions { display: flex; gap: 10px; }
+  .rename-actions button {
+    flex: 1; padding: 11px 0; border-radius: 100px; font-size: 14.5px; font-weight: 600; border: none;
+    transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
+  }
+  .rename-actions button:active { transform: scale(0.95); opacity: 0.85; }
+  .rename-cancel { background: rgba(255,255,255,0.08); color: var(--text-dim); border: 1px solid var(--glass-border); }
+  .rename-save { background: linear-gradient(160deg, #5ac8ff, #2f7fd6); color: #06131f; }
 
   .fab-bar { display: flex; gap: 10px; padding: 14px 12px; }
   .btn {
@@ -242,6 +291,31 @@
     background: transparent; font-size: 20px; font-weight: 600; padding: 14px 16px;
     backdrop-filter: none;
   }
+
+  /* ---------- ATC card ---------- */
+  .atc-form { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .atc-field label {
+    display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .atc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .atc-checklist { display: flex; flex-direction: column; gap: 8px; }
+  .atc-check-row {
+    display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 14px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .atc-check-row.done { background: rgba(90,200,255,0.14); border-color: rgba(90,200,255,0.4); }
+  .atc-checkbox {
+    width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--glass-border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s cubic-bezier(.34,1.56,.64,1), border-color 0.2s ease;
+  }
+  .atc-check-row.done .atc-checkbox { background: var(--accent); border-color: var(--accent); }
+  .atc-checkbox svg { width: 14px; height: 14px; opacity: 0; transform: scale(0.5); transition: all 0.22s cubic-bezier(.34,1.56,.64,1); }
+  .atc-check-row.done .atc-checkbox svg { opacity: 1; transform: scale(1); }
+  .atc-check-label { font-size: 14.5px; flex: 1; transition: color 0.2s ease; }
+  .atc-check-row.done .atc-check-label { color: var(--text-dim); text-decoration: line-through; }
 
   .status { text-align: center; padding: 20px; color: var(--text-dim); font-size: 14px;
     opacity: 0; animation: viewIn 0.3s cubic-bezier(.22,1,.36,1) forwards; }
@@ -520,6 +594,7 @@
       <h1><span class="app-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></span>Notebook</h1>
       <div style="display:flex; gap:8px;">
         <button class="action" id="btn-new-note">Text</button>
+        <button class="action" id="btn-new-atc">ATC</button>
         <button class="action" id="btn-new-drawing">Draw</button>
       </div>
     </header>
@@ -866,8 +941,14 @@ async function renderDocuments() {
         <div class="title">${escapeHtml(doc.title)}</div>
         <div class="sub">${new Date(doc.dateAdded).toLocaleDateString()}</div>
       </div>
+      <button class="rename">✎</button>
       <button class="del">&times;</button>`;
     row.querySelector(".info").addEventListener("click", () => viewDocument(doc));
+    row.querySelector(".rename").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const newTitle = await promptRename(doc.title, "Rename document");
+      if (newTitle) { doc.title = newTitle; await dbPut("documents", doc); renderDocuments(); }
+    });
     row.querySelector(".del").addEventListener("click", async (e) => {
       e.stopPropagation();
       await dbDelete("documents", doc.id);
@@ -902,6 +983,46 @@ document.getElementById("file-input-doc").addEventListener("change", async (e) =
 
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------- Rename dialog (shared by Documents/Charts/Notebook) ---------- */
+function promptRename(currentValue, title = "Rename") {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "rename-overlay";
+    overlay.innerHTML = `
+      <div class="rename-card">
+        <div class="rename-title">${escapeHtml(title)}</div>
+        <input type="text" class="rename-input" value="${escapeHtml(currentValue || "")}">
+        <div class="rename-actions">
+          <button class="rename-cancel">Cancel</button>
+          <button class="rename-save">Save</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector(".rename-input");
+    requestAnimationFrame(() => {
+      overlay.classList.add("in");
+      input.focus();
+      input.select();
+    });
+    function close(result) {
+      overlay.classList.remove("in");
+      setTimeout(() => overlay.remove(), 220);
+      resolve(result);
+    }
+    overlay.querySelector(".rename-cancel").addEventListener("click", () => { haptic(); close(null); });
+    overlay.querySelector(".rename-save").addEventListener("click", () => {
+      haptic();
+      const val = input.value.trim();
+      close(val ? val : null);
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { const val = input.value.trim(); close(val ? val : null); }
+      if (e.key === "Escape") close(null);
+    });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(null); });
+  });
 }
 
 /* ================= PDF ANNOTATOR ================= */
@@ -1387,8 +1508,14 @@ async function renderCachedCharts() {
           <div class="title">${escapeHtml(chart.name)}</div>
           <div class="sub">${escapeHtml(chart.category)}</div>
         </div>
+        <button class="rename">✎</button>
         <button class="del">&times;</button>`;
       row.querySelector(".info").addEventListener("click", () => viewChart(chart));
+      row.querySelector(".rename").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const newName = await promptRename(chart.name, "Rename chart");
+        if (newName) { chart.name = newName; await dbPut("charts", chart); renderCachedCharts(); }
+      });
       row.querySelector(".del").addEventListener("click", async (e) => {
         e.stopPropagation();
         await dbDelete("charts", chart.id);
@@ -1419,14 +1546,26 @@ async function renderNotes() {
   notes.forEach((note) => {
     const row = document.createElement("div");
     row.className = "row";
+    const icon = note.type === "drawing" ? "🎨 " : note.type === "atc" ? "📻 " : "";
+    const sub = note.type === "drawing" ? "Sketch"
+      : note.type === "atc" ? escapeHtml(summarizeATC(note))
+      : escapeHtml((note.body || "").slice(0, 60));
     row.innerHTML = `
       <div class="info">
-        <div class="title">${note.type === "drawing" ? "🎨 " : ""}${escapeHtml(note.title || "Untitled")}</div>
-        <div class="sub">${note.type === "drawing" ? "Sketch" : escapeHtml((note.body || "").slice(0, 60))}</div>
+        <div class="title">${icon}${escapeHtml(note.title || "Untitled")}</div>
+        <div class="sub">${sub}</div>
       </div>
+      <button class="rename">✎</button>
       <button class="del">&times;</button>`;
     row.querySelector(".info").addEventListener("click", () => {
-      if (note.type === "drawing") editDrawing(note); else editNote(note);
+      if (note.type === "drawing") editDrawing(note);
+      else if (note.type === "atc") editATC(note);
+      else editNote(note);
+    });
+    row.querySelector(".rename").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const newTitle = await promptRename(note.title, "Rename");
+      if (newTitle) { note.title = newTitle; note.dateModified = Date.now(); await dbPut("notes", note); renderNotes(); }
     });
     row.querySelector(".del").addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -1439,8 +1578,20 @@ async function renderNotes() {
   list.appendChild(container);
 }
 
+function summarizeATC(note) {
+  const a = note.atc || {};
+  const parts = [];
+  if (a.squawk) parts.push(`Squawk ${a.squawk}`);
+  if (a.altitude) parts.push(a.altitude);
+  if (a.frequency) parts.push(a.frequency);
+  return parts.length ? parts.join(" · ") : "ATC card";
+}
+
 document.getElementById("btn-new-note").addEventListener("click", () => {
   editNote({ id: uid(), type: "text", title: "", body: "", dateModified: Date.now() });
+});
+document.getElementById("btn-new-atc").addEventListener("click", () => {
+  editATC({ id: uid(), type: "atc", title: "", dateModified: Date.now() });
 });
 document.getElementById("btn-new-drawing").addEventListener("click", () => {
   editDrawing({ id: uid(), type: "drawing", title: "Sketch", drawingData: null, dateModified: Date.now() });
@@ -1479,6 +1630,84 @@ function editNote(note) {
 
   openFullScreen("Note", wrap, () => { save(); renderNotes(); });
   setTimeout(() => titleInput.focus(), 50);
+}
+
+/* ---------- ATC quick-reference card ---------- */
+// A fill-in card for the info you're juggling on a call: callsign, squawk,
+// assigned altitude, heading, frequency, and clearance — plus a short
+// pre-call checklist. Lives in the Notebook alongside text notes/sketches.
+const ATC_CHECKLIST_DEFAULTS = [
+  "Squawk set & verified",
+  "Altimeter set",
+  "Readback confirmed",
+  "Frequency confirmed",
+];
+
+function editATC(note) {
+  note.atc = note.atc || { callsign: "", squawk: "", altitude: "", heading: "", frequency: "", clearance: "" };
+  note.checklist = (note.checklist && note.checklist.length)
+    ? note.checklist
+    : ATC_CHECKLIST_DEFAULTS.map((label) => ({ label, done: false }));
+
+  const save = async () => {
+    note.type = "atc";
+    note.title = note.atc.callsign || "ATC Card";
+    note.dateModified = Date.now();
+    await dbPut("notes", note);
+  };
+
+  const wrap = document.createElement("div");
+  wrap.className = "atc-form";
+
+  function field(key, label, placeholder) {
+    const el = document.createElement("div");
+    el.className = "atc-field";
+    el.innerHTML = `<label>${label}</label>`;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = placeholder || "";
+    input.value = note.atc[key] || "";
+    input.addEventListener("input", () => { note.atc[key] = input.value; save(); });
+    el.appendChild(input);
+    return el;
+  }
+
+  wrap.appendChild(field("callsign", "Callsign", "N12345"));
+
+  const grid = document.createElement("div");
+  grid.className = "atc-grid";
+  grid.appendChild(field("squawk", "Squawk", "1200"));
+  grid.appendChild(field("altitude", "Altitude", "FL080"));
+  grid.appendChild(field("heading", "Heading", "270°"));
+  grid.appendChild(field("frequency", "Frequency", "124.35"));
+  wrap.appendChild(grid);
+
+  wrap.appendChild(field("clearance", "Clearance / route", "As filed"));
+
+  const checklistLabel = document.createElement("div");
+  checklistLabel.className = "atc-field";
+  checklistLabel.innerHTML = `<label>Checklist</label>`;
+  wrap.appendChild(checklistLabel);
+
+  const checklistWrap = document.createElement("div");
+  checklistWrap.className = "atc-checklist";
+  note.checklist.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "atc-check-row" + (item.done ? " done" : "");
+    row.innerHTML = `
+      <div class="atc-checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="#06131f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="atc-check-label">${escapeHtml(item.label)}</div>`;
+    row.addEventListener("click", () => {
+      item.done = !item.done;
+      row.classList.toggle("done", item.done);
+      haptic(6);
+      save();
+    });
+    checklistWrap.appendChild(row);
+  });
+  wrap.appendChild(checklistWrap);
+
+  openFullScreen("ATC Card", wrap, () => { save(); renderNotes(); });
 }
 
 /* ---------- Free-draw scratchpad ---------- */
