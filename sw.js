@@ -3,13 +3,17 @@
 // downloaded charts, and notes are stored separately in IndexedDB (see
 // index.html) — this file only handles the app's own code/assets.
 
-const CACHE_NAME = "flight-companion-v2";
+const CACHE_NAME = "fliteboard-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/icon-180.png",
+  "./icons/favicon.ico",
+  "./icons/favicon-16.png",
+  "./icons/favicon-32.png"
 ];
 // PDF.js — powers the chart/document annotator. Cached separately (best
 // effort) so a hiccup fetching these doesn't fail the whole install and
