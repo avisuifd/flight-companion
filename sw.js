@@ -3,7 +3,7 @@
 // downloaded charts, and notes are stored separately in IndexedDB (see
 // index.html) — this file only handles the app's own code/assets.
 
-const CACHE_NAME = "fliteboard-v4";
+const CACHE_NAME = "fliteboard-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
